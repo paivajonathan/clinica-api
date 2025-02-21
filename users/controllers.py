@@ -33,7 +33,7 @@ class UserController:
         return User.objects.all()
 
     @route.get(
-        "/{int:id}",
+        "/{int:id}/",
         response={
             status.HTTP_200_OK: UserRoleOut,
             status.HTTP_404_NOT_FOUND: DictStrAny,
@@ -49,7 +49,7 @@ class UserController:
             }
 
     @route.post(
-        "/patient/register",
+        "/patient/register/",
         auth=None,
         response={
             status.HTTP_201_CREATED: UserRoleOut,
@@ -78,80 +78,128 @@ class UserController:
         except IntegrityError as error:
             return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}
 
-    # @route.put(
-    #     "/patient/edit",
-    #     response={
-    #         status.HTTP_200_OK: UserOut,
-    #         frozenset(
-    #             [
-    #                 status.HTTP_400_BAD_REQUEST,
-    #                 status.HTTP_404_NOT_FOUND,
-    #                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             ]
-    #         ): dict[str, any],
-    #     },
-    #     permissions=[],
-    # )
-    # def edit_patient(self, request, payload: PatientIn):
-    #     try:
-    #         with transaction.atomic():
-    #             user = get_object_or_404(User, id=request.user.id)
-    #             return status.HTTP_200_OK, instance
-    #     except Http404:
-    #         return status.HTTP_404_NOT_FOUND, {
-    #             "message": f"{User._meta.verbose_name.capitalize()} não existe."
-    #         }
-    #     except IntegrityError as error:
-    #         return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}
-        
-    # @route.put(
-    #     "/doctor/edit",
-    #     response={
-    #         status.HTTP_200_OK: UserOut,
-    #         frozenset(
-    #             [
-    #                 status.HTTP_400_BAD_REQUEST,
-    #                 status.HTTP_404_NOT_FOUND,
-    #                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             ]
-    #         ): dict[str, any],
-    #     },
-    #     permissions=[],
-    # )
-    # def edit_patient(self, request, payload: PatientIn):
-    #     try:
-    #         with transaction.atomic():
-    #             instance = User.objects.create(**payload)
-    #             return status.HTTP_200_OK, instance
-    #     except Http404:
-    #         return status.HTTP_404_NOT_FOUND, {
-    #             "message": f"{User._meta.verbose_name.capitalize()} não existe."
-    #         }
-    #     except IntegrityError as error:
-    #         return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}
+    @route.put(
+        "/patient/edit/",
+        response={
+            status.HTTP_200_OK: UserRoleOut,
+            frozenset(
+                [
+                    status.HTTP_400_BAD_REQUEST,
+                    status.HTTP_404_NOT_FOUND,
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                ]
+            ): DictStrAny,
+        },
+        permissions=[],
+    )
+    def edit_patient(self, request, payload: PatientIn):
+        try:
+            with transaction.atomic():
+                payload = payload.dict()
+                
+                user_data = payload.pop("user_data", {})
+                patient_data = payload
+                
+                user = get_object_or_404(User, id=request.user.id)
+                
+                for k, v in user_data.items():
+                    if k == "password":
+                        user.set_password(v)
+                        continue
+                    setattr(user, k, v)    
+                
+                patient = user.patient
+                
+                for k, v in patient_data.items():
+                    setattr(user, k, v)    
+                
+                user.save()
+                patient.save()
+                
+                return status.HTTP_200_OK, user
+        except Http404:
+            return status.HTTP_404_NOT_FOUND, {
+                "message": f"{User._meta.verbose_name.capitalize()} não existe."
+            }
+        except IntegrityError as error:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}
 
-    # @route.delete(
-    #     "/delete-account",
-    #     response={
-    #         status.HTTP_204_NO_CONTENT: None,
-    #         frozenset(
-    #             [
-    #                 status.HTTP_404_NOT_FOUND,
-    #                 status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             ]
-    #         ): dict[str, any],
-    #     },
-    #     permissions=[],
-    # )
-    # def delete_account(self, request):
-    #     try:
-    #         with transaction.atomic():
-    #             instance = get_object_or_404(User, id=request.user.id)
-    #             instance.delete()
-    #             return status.HTTP_204_NO_CONTENT, None
-    #     except Http404:
-    #         return status.HTTP_404_NOT_FOUND, {
-    #             "message": f"{User._meta.verbose_name.capitalize()} não existe."
-    #         }
-    #     except IntegrityError as error:
-    #         return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}
+    @route.put(
+        "/doctor/edit/",
+        response={
+            status.HTTP_200_OK: UserRoleOut,
+            frozenset(
+                [
+                    status.HTTP_400_BAD_REQUEST,
+                    status.HTTP_404_NOT_FOUND,
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                ]
+            ): DictStrAny,
+        },
+        permissions=[],
+    )
+    def edit_doctor(self, request, payload: DoctorIn):
+        try:
+            with transaction.atomic():
+                payload = payload.dict()
+                
+                user_data = payload.pop("user_data", {})
+                doctor_data = payload
+                
+                user = get_object_or_404(User, id=request.user.id)
+                
+                for k, v in user_data.items():
+                    if k == "password":
+                        user.set_password(v)
+                        continue
+                    setattr(user, k, v)    
+                
+                doctor = user.doctor
+                
+                for k, v in doctor_data.items():
+                    setattr(user, k, v)    
+                
+                user.save()
+                doctor.save()
+                
+                return status.HTTP_200_OK, user
+        except Http404:
+            return status.HTTP_404_NOT_FOUND, {
+                "message": f"{User._meta.verbose_name.capitalize()} não existe."
+            }
+        except IntegrityError as error:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}
+
+    @route.delete(
+        "/delete-account/",
+        response={
+            status.HTTP_204_NO_CONTENT: None,
+            frozenset(
+                [
+                    status.HTTP_404_NOT_FOUND,
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                ]
+            ): DictStrAny,
+        },
+        permissions=[],
+    )
+    def delete_account(self, request):
+        try:
+            with transaction.atomic():
+                user = get_object_or_404(User, id=request.user.id)
+                
+                if user.role == "P":
+                    patient = user.patient
+                    patient.delete()
+                elif user.role == "D":
+                    doctor = user.doctor
+                    doctor.delete()
+                
+                user.delete()
+                return status.HTTP_204_NO_CONTENT, None
+        except Http404:
+            return status.HTTP_404_NOT_FOUND, {
+                "message": f"{User._meta.verbose_name.capitalize()} não existe."
+            }
+        except IntegrityError as error:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, {"message": str(error)}

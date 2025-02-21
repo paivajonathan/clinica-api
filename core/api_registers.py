@@ -3,6 +3,7 @@ from ninja_extra import NinjaExtraAPI
 
 from auth.controllers import AuthController
 from users.controllers import UserController
+from consultations.controllers import AttendanceController, ConsultationController
 
 
 api = NinjaExtraAPI(
@@ -23,5 +24,7 @@ api = NinjaExtraAPI(
 
 api.register_controllers(
     AuthController,
-    UserController
+    UserController,
+    ConsultationController,
+    AttendanceController,
 )
