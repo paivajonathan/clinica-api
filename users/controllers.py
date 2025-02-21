@@ -15,8 +15,10 @@ from .schemas import (
     UserDoctorIn,
     UserPatientIn,
     UserRoleOut,
+    DoctorOut,
+    PatientOut,
 )
-from .models import Patient, User
+from .models import Patient, User, Doctor
 
 
 @api_controller(
@@ -49,6 +51,38 @@ class UserController:
         except Http404:
             return status.HTTP_404_NOT_FOUND, {
                 "message": f"{User._meta.verbose_name.capitalize()} não existe."
+            }
+
+    @route.get(
+        "/doctor/{int:id}/",
+        response={
+            status.HTTP_200_OK: DoctorOut,
+            status.HTTP_404_NOT_FOUND: DictStrAny,
+        },
+        permissions=[],
+    )
+    def get_doctor(self, id: int):
+        try:
+            return status.HTTP_200_OK, get_object_or_404(Doctor, id=id)
+        except Http404:
+            return status.HTTP_404_NOT_FOUND, {
+                "message": f"{Doctor._meta.verbose_name.capitalize()} não existe."
+            }
+
+    @route.get(
+        "/patient/{int:id}/",
+        response={
+            status.HTTP_200_OK: PatientOut,
+            status.HTTP_404_NOT_FOUND: DictStrAny,
+        },
+        permissions=[],
+    )
+    def get_patient(self, id: int):
+        try:
+            return status.HTTP_200_OK, get_object_or_404(Patient, id=id)
+        except Http404:
+            return status.HTTP_404_NOT_FOUND, {
+                "message": f"{Patient._meta.verbose_name.capitalize()} não existe."
             }
 
     @route.post(

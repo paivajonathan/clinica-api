@@ -11,15 +11,29 @@ class UserFilter(FilterSchema):
 
 
 class PatientOut(Schema):
+    id: int
+    full_name: str
+    birth_date: datetime.date
     gender: str
+    phone: str
+    address: str
+    
+    @staticmethod
+    def resolve_full_name(obj):
+        return obj.user.get_full_name()
     
 
 class DoctorOut(Schema):
     id: int
+    full_name: str
     code: str
     phone: str
     specialty: str
     
+    @staticmethod
+    def resolve_full_name(obj):
+        return obj.user.get_full_name()
+
     @staticmethod
     def resolve_specialty(obj):
         return obj.specialty.description
