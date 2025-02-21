@@ -10,6 +10,10 @@ class UserFilter(FilterSchema):
     role: Optional[str] = Field(None, q="role__iexact",)
 
 
+class DoctorFilter(FilterSchema):
+    id: Optional[int] = Field(None, q="id__exact")
+
+
 class PatientOut(Schema):
     id: int
     full_name: str

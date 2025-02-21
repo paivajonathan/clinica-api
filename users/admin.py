@@ -37,15 +37,18 @@ class UserForm(forms.ModelForm):
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     form = UserForm
-    # inlines = [DoctorInline]
     
     def get_inlines(self, request, obj):
-        print(obj)
         if not obj:
-            return super().get_inlines(request, obj)
+            return [DoctorInline]
+        
         if obj.role == "D":
             return [DoctorInline]
-        return [PatientInline]
+        
+        if obj.role == "P":
+            return [PatientInline]
+        
+        return []
         
     
     def has_change_permission(self, request, obj = ...):

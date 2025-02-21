@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from django.http import Http404
 from ninja import Query
@@ -6,6 +6,7 @@ from ninja.types import DictStrAny
 from ninja.pagination import paginate
 from ninja_extra.ordering import Ordering, ordering
 from ninja_extra import api_controller, route, status
+from django.db.models import Q
 from ninja_jwt.authentication import JWTAuth
 from django.shortcuts import get_object_or_404
 from django.db import IntegrityError, transaction
@@ -15,6 +16,7 @@ from .schemas import (
     UserDoctorIn,
     UserPatientIn,
     UserRoleOut,
+    DoctorFilter,
     DoctorOut,
     PatientOut,
 )
@@ -36,6 +38,31 @@ class UserController:
         users = User.objects.all()
         users = filters.filter(users)
         return users
+    
+    @route.get(
+        "/doctors/",
+        response={
+            status.HTTP_200_OK: List[DoctorOut],
+            status.HTTP_403_FORBIDDEN: DictStrAny,
+        },
+        permissions=[],
+    )
+    def list(self, request, filters: DoctorFilter = Query(...), has_pending_consultation: Optional[bool] = Query(None)):
+        doctors = Doctor.objects.all()
+        doctors = filters.filter(doctors)
+        
+        if has_pending_consultation is not None:
+            if request.user.role != "P":
+                return status.HTTP_403_FORBIDDEN, {"message": "Forbidden"}
+            
+            patient_pending_consultations = request.user.patient.consultations.filter(status="S").values_list("doctor_id", flat=True)
+            
+            if has_pending_consultation is True:
+                doctors = doctors.filter(id__in=patient_pending_consultations)
+            else:
+                doctors = doctors.exclude(id__in=patient_pending_consultations)
+        
+        return doctors
 
     @route.get(
         "/{int:id}/",
