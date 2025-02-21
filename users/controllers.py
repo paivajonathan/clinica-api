@@ -47,7 +47,7 @@ class UserController:
         },
         permissions=[],
     )
-    def list(self, request, filters: DoctorFilter = Query(...), has_pending_consultation: Optional[bool] = Query(None)):
+    def list_doctors(self, request, filters: DoctorFilter = Query(...), has_pending_consultation: Optional[bool] = Query(None)):
         doctors = Doctor.objects.all()
         doctors = filters.filter(doctors)
         

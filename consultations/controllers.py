@@ -14,7 +14,8 @@ from .schemas import (
     ConsultationShow,
     ConsultationRegister,
     AttendanceShow,
-    AttendanceRegister
+    AttendanceRegister,
+    ConsultationFilter,
 )
 from .models import Consultation, Attendance
 
@@ -30,8 +31,10 @@ class ConsultationController:
         response=List[ConsultationShow],
         permissions=[],
     )
-    def list(self):
-        return Consultation.objects.all()
+    def list(self, request, filters: ConsultationFilter = Query(...)):
+        consultations = Consultation.objects.all()
+        consultations = filters.filter(consultations)
+        return consultations
 
     @route.get(
         "/{int:id}/",
