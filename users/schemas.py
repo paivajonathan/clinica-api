@@ -1,7 +1,13 @@
-from ninja import Schema
+from ninja import Schema, Field, FilterSchema
+from typing import Optional
 from ninja.types import DictStrAny
 from .models import Patient
 import datetime
+
+
+class UserFilter(FilterSchema):
+    id: Optional[int] = Field(None, q="id__exact")
+    role: Optional[str] = Field(None, q="role__iexact",)
 
 
 class PatientOut(Schema):
@@ -9,7 +15,14 @@ class PatientOut(Schema):
     
 
 class DoctorOut(Schema):
+    id: int
     code: str
+    phone: str
+    specialty: str
+    
+    @staticmethod
+    def resolve_specialty(obj):
+        return obj.specialty.description
 
 
 class UserOut(Schema):
@@ -23,20 +36,20 @@ class UserOut(Schema):
 
 class UserRoleOut(Schema):
     user: UserOut
-    patient_data: PatientOut | None
-    doctor_data: DoctorOut | None
+    patient: PatientOut | None
+    doctor: DoctorOut | None
     
     @staticmethod
     def resolve_user(obj):
         return obj
     
     @staticmethod
-    def resolve_patient_data(obj):
+    def resolve_patient(obj):
         if obj.role == "P":
             return obj.patient
     
     @staticmethod
-    def resolve_doctor_data(obj):
+    def resolve_doctor(obj):
         if obj.role == "D":
             return obj.doctor
 
@@ -49,15 +62,23 @@ class UserIn(Schema):
 
 
 class PatientIn(Schema):
-    user_data: UserIn
     birth_date: datetime.date
     gender: str
     phone: str
     address: str
     
 
+class UserPatientIn(Schema):
+    user: UserIn
+    patient: PatientIn
+    
+
 class DoctorIn(Schema):
-    user_data: UserIn
     code: str
     phone: str
     specialty_id: int
+
+
+class UserDoctorIn(Schema):
+    user: UserIn
+    doctor: DoctorIn

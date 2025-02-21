@@ -11,8 +11,9 @@ from django.shortcuts import get_object_or_404
 from django.db import IntegrityError, transaction
 
 from .schemas import (
-    PatientIn,
-    DoctorIn,
+    UserFilter,
+    UserDoctorIn,
+    UserPatientIn,
     UserRoleOut,
 )
 from .models import Patient, User
@@ -29,8 +30,10 @@ class UserController:
         response=List[UserRoleOut],
         permissions=[],
     )
-    def list(self):
-        return User.objects.all()
+    def list(self, filters: UserFilter = Query(...)):
+        users = User.objects.all()
+        users = filters.filter(users)
+        return users
 
     @route.get(
         "/{int:id}/",
@@ -63,13 +66,13 @@ class UserController:
         },
         permissions=[],
     )
-    def register_patient(self, request, payload: PatientIn):
+    def register_patient(self, request, payload: UserPatientIn):
         try:
             with transaction.atomic():
                 payload = payload.dict()
                 
-                user_data = payload.pop("user_data", {})
-                patient_data = payload
+                user_data = payload.pop("user", {})
+                patient_data = payload.pop("patient", {})
                 
                 user = User.objects.create_user(**user_data, role="P")
                 patient = Patient.objects.create(**patient_data, user=user)
@@ -92,13 +95,13 @@ class UserController:
         },
         permissions=[],
     )
-    def edit_patient(self, request, payload: PatientIn):
+    def edit_patient(self, request, payload: UserPatientIn):
         try:
             with transaction.atomic():
                 payload = payload.dict()
                 
-                user_data = payload.pop("user_data", {})
-                patient_data = payload
+                user_data = payload.pop("user", {})
+                patient_data = payload.pop("patient", {})
                 
                 user = get_object_or_404(User, id=request.user.id)
                 
@@ -138,13 +141,13 @@ class UserController:
         },
         permissions=[],
     )
-    def edit_doctor(self, request, payload: DoctorIn):
+    def edit_doctor(self, request, payload: UserDoctorIn):
         try:
             with transaction.atomic():
                 payload = payload.dict()
                 
-                user_data = payload.pop("user_data", {})
-                doctor_data = payload
+                user_data = payload.pop("user", {})
+                doctor_data = payload.pop("doctor", {})
                 
                 user = get_object_or_404(User, id=request.user.id)
                 
