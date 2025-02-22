@@ -13,3 +13,6 @@
 
 # Diagrama Relacional
 <img src="image.png" alt="Diagrama Relacional">
+
+# Link de deploy
+[Clique Aqui](https://clinica-api-dg4v.onrender.com)
