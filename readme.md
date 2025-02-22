@@ -9,3 +9,6 @@
 - django-admin startproject core .
 - python manage.py startapp doctors
 - git init
+
+# Diagrama Relacional
+<img src="image.png" alt="Diagrama Relacional">
