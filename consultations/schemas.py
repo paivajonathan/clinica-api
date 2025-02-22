@@ -4,6 +4,16 @@ from ninja import Schema, FilterSchema, Field
 from typing import Optional
 
 
+class AttendanceShow(Schema):
+    observations: str
+    consultation_id: int
+
+
+class AttendanceRegister(Schema):
+    observations: str
+    consultation_id: int
+
+
 class ConsultationFilter(FilterSchema):
     id: Optional[int] = Field(None, q="id__exact")
     patient_id: Optional[int] = Field(None, q="patient_id__exact",)
@@ -17,7 +27,9 @@ class ConsultationShow(Schema):
     time: datetime.time
     status: str
     observations: str
+    patient_id: int
     patient_full_name: str
+    doctor_id: int
     doctor_full_name: str
     
     @staticmethod
@@ -36,11 +48,3 @@ class ConsultationRegister(Schema):
     doctor_id: int
 
 
-class AttendanceShow(Schema):
-    observations: str
-    consultation_id: int
-
-
-class AttendanceRegister(Schema):
-    observations: str
-    consultation_id: int
